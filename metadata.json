@@ -1,5 +1,0 @@
-{
-  "name": "Aplikasi Penomoran Surat",
-  "description": "Aplikasi untuk manajemen penomoran surat internal dengan sisi admin untuk statistik dan pengaturan, serta sisi user untuk input data.",
-  "requestFramePermissions": []
-}
