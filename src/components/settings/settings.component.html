@@ -1,0 +1,168 @@
+<div class="space-y-8 max-w-4xl mx-auto">
+  <h2 class="text-2xl font-bold text-gray-900">Pengaturan</h2>
+
+  @if (isDataReady()) {
+     <!-- Google Sheets Sync -->
+    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">Sinkronisasi Google Sheets</h3>
+      @if(dataService.googleScriptUrl()) {
+          <p class="text-sm text-green-600 font-medium mb-4">Status: Sinkronisasi Aktif</p>
+      } @else {
+          <p class="text-sm text-yellow-600 font-medium mb-4">Status: Belum Dikonfigurasi</p>
+      }
+
+      <details class="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-4">
+        <summary class="cursor-pointer font-medium text-sm text-gray-700">Tampilkan Instruksi Penyiapan</summary>
+        <div class="prose prose-sm mt-4 text-gray-600 space-y-2">
+          <p>Ikuti langkah-langkah ini untuk mengaktifkan sinkronisasi otomatis ke Google Sheet:</p>
+          <ol>
+            <li>Buat Google Sheet baru di <a href="https://sheets.new" target="_blank" rel="noopener noreferrer" class="text-orange-600 hover:underline">sheets.new</a>. Beri nama sheet (tab) di bagian bawah menjadi <strong>"Data Penomoran"</strong>.</li>
+            <li>Buka Editor Skrip melalui menu <strong>Extensions &gt; Apps Script</strong>.</li>
+            <li>Hapus semua kode yang ada di editor dan tempelkan kode di bawah ini:</li>
+          </ol>
+          <pre class="bg-gray-800 text-white p-3 rounded-md text-xs overflow-x-auto"><code [textContent]="googleAppsScriptCode"></code></pre>
+          <ol start="4">
+            <li>Simpan proyek skrip (ikon disket).</li>
+            <li>Klik tombol <strong>Deploy &gt; New deployment</strong>.</li>
+            <li>Klik ikon gerigi di sebelah "Select type", pilih <strong>Web app</strong>.</li>
+            <li>Pada bagian "Who has access", pilih <strong>Anyone</strong> (bukan "Anyone with Google account"). Ini penting agar aplikasi bisa mengirim data.</li>
+            <li>Klik <strong>Deploy</strong>. Berikan izin akses jika diminta oleh Google.</li>
+            <li>Salin <strong>Web app URL</strong> yang ditampilkan dan tempel di kolom di bawah ini.</li>
+          </ol>
+        </div>
+      </details>
+
+      <div>
+          <label for="scriptUrl" class="block text-sm font-medium text-gray-700">URL Web App Google Apps Script</label>
+          <input id="scriptUrl" type="url" [ngModel]="scriptUrlInput()" (ngModelChange)="scriptUrlInput.set($event)" name="scriptUrl" placeholder="https://script.google.com/macros/s/..." class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+      </div>
+      <div class="mt-4 flex flex-col sm:flex-row gap-3">
+          <button (click)="saveScriptUrl()" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+            Simpan URL
+          </button>
+          <button (click)="testScriptUrl()" [disabled]="testStatus() === 'testing'" class="inline-flex items-center justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-gray-200 disabled:cursor-wait">
+              @if(testStatus() === 'testing') {
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Menguji...
+              } @else {
+                Tes Koneksi
+              }
+          </button>
+      </div>
+      @if(testStatus() === 'success') {
+        <p class="text-sm text-green-600 mt-3">✅ Koneksi berhasil! Data uji coba telah dikirim ke sheet Anda.</p>
+      }
+      @if(testStatus() === 'error') {
+        <p class="text-sm text-red-600 mt-3">❌ Gagal terhubung. Periksa kembali URL Anda dan pastikan langkah-langkah penyiapan sudah benar.</p>
+      }
+    </div>
+
+    <!-- Data Management -->
+    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Manajemen Data Lokal</h3>
+      <p class="text-sm text-gray-600 mb-4">
+        Karena aplikasi ini berjalan sepenuhnya di browser Anda, data tidak tersinkronisasi antar perangkat secara otomatis. Gunakan fitur ekspor untuk mencadangkan data Anda, dan impor untuk memuat cadangan data atau memindahkannya ke perangkat lain.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button (click)="exportData()" class="inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Ekspor Data
+        </button>
+        
+        <label class="inline-flex items-center justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Impor Data
+          <input type="file" class="hidden" (change)="onFileSelected($event)" accept=".json">
+        </label>
+      </div>
+
+      @if (importError()) {
+        <div class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md" role="alert">
+          <p>{{ importError() }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Add New Klasifikasi -->
+    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Tambah Kode Klasifikasi Baru</h3>
+      <form (ngSubmit)="addKlasifikasi()" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div class="md:col-span-1">
+          <label for="newKode" class="block text-sm font-medium text-gray-700">Kode</label>
+          <input id="newKode" type="text" [ngModel]="newKlasifikasiKode()" (ngModelChange)="newKlasifikasiKode.set($event)" name="newKode" placeholder="Contoh: XY" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+        </div>
+        <div class="md:col-span-2">
+          <label for="newDeskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+          <input id="newDeskripsi" type="text" [ngModel]="newKlasifikasiDeskripsi()" (ngModelChange)="newKlasifikasiDeskripsi.set($event)" name="newDeskripsi" placeholder="Contoh: Deskripsi Kode Baru" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+        </div>
+        <div class="md:col-span-3 text-right">
+          <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+            Tambah Kode
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Manage Kode Turunan -->
+    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">Manajemen Kode Turunan</h3>
+      
+      <div class="mb-4">
+        <label for="selectKlasifikasi" class="block text-sm font-medium text-gray-700">Pilih Kode Klasifikasi Utama</label>
+        <select id="selectKlasifikasi" (change)="selectKlasifikasi($event)" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md">
+          <option value="" disabled selected>-- Pilih Kode --</option>
+          @for(klasifikasi of klasifikasiList(); track klasifikasi.kode) {
+            <option [value]="klasifikasi.kode">{{ klasifikasi.kode }} - {{ klasifikasi.deskripsi }}</option>
+          }
+        </select>
+      </div>
+
+      @if (selectedKlasifikasi(); as selected) {
+        <div>
+          <h4 class="font-semibold text-gray-700 mb-2">Daftar Kode Turunan untuk {{selected.kode}}:</h4>
+          @if (selected.turunan.length > 0) {
+            <ul class="space-y-2 bg-gray-50 p-4 rounded-md border border-gray-200 text-gray-700">
+              @for(turunan of selected.turunan; track turunan.kode) {
+                <li class="flex justify-between items-center">
+                  <span>
+                    <span class="font-mono bg-orange-100 text-orange-800 px-1 py-0.5 rounded">{{ turunan.kode }}</span> - {{ turunan.deskripsi }}
+                  </span>
+                  <button (click)="deleteTurunan(selected.kode, turunan.kode)" class="text-red-600 hover:text-red-800 text-sm font-semibold transition-colors duration-150">
+                    Hapus
+                  </button>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="text-sm text-gray-500 bg-gray-50 p-4 rounded-md border border-gray-200">Belum ada kode turunan.</p>
+          }
+
+          <h4 class="font-semibold text-gray-700 mt-6 mb-2">Tambah Kode Turunan Baru:</h4>
+          <form (ngSubmit)="addTurunan()" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-t border-gray-200 pt-4">
+            <div class="md:col-span-1">
+              <label for="newTurunanKode" class="block text-sm font-medium text-gray-700">Kode Turunan</label>
+              <input id="newTurunanKode" type="text" [ngModel]="newTurunanKode()" (ngModelChange)="newTurunanKode.set($event)" name="newTurunanKode" placeholder="Contoh: 01.00" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+            </div>
+            <div class="md:col-span-2">
+              <label for="newTurunanDeskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+              <input id="newTurunanDeskripsi" type="text" [ngModel]="newTurunanDeskripsi()" (ngModelChange)="newTurunanDeskripsi.set($event)" name="newTurunanDeskripsi" placeholder="Contoh: Deskripsi Turunan" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm">
+            </div>
+            <div class="md:col-span-3 text-right">
+              <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                Tambah Turunan
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center py-10">
+      <p class="text-gray-500">Memuat pengaturan...</p>
+    </div>
+  }
+</div>
